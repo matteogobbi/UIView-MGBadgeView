@@ -59,4 +59,4 @@ Matteo Gobbi
 
 ## License
 
-MGConferenceDatePicker is available under the MIT license.
+UIView+MGBadgeView is available under the MIT license.
