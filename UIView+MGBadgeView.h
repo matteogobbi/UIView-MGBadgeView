@@ -10,6 +10,8 @@
 
 
 typedef NS_ENUM(NSUInteger, MGBadgePosition) {
+    MGBadgePositionCenterLeft,
+    MGBadgePositionCenterRight,
     MGBadgePositionTopLeft,
     MGBadgePositionTopRight,
     MGBadgePositionBottomLeft,
@@ -39,6 +41,8 @@ typedef NS_ENUM(NSUInteger, MGBadgePosition) {
 @property (nonatomic) BOOL displayIfZero;
 
 @property (nonatomic) float horizontalOffset;
+
+@property (nonatomic) float verticalOffset;
 
 @end
 
