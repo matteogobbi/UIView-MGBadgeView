@@ -29,6 +29,7 @@ static int const kMGBadgeViewTag = 9876;
         _minDiameter = 25.0;
         _position = MGBadgePositionBest;
         _displayIfZero = NO;
+		_horizontalOffset = 0.0;
         
         self.backgroundColor = [UIColor clearColor];
         self.opaque = YES;
@@ -209,19 +210,19 @@ static int const kMGBadgeViewTag = 9876;
     
     switch (position) {
         case MGBadgePositionTopRight: {
-            self.center = CGPointMake(superviewFrame.size.width, 0);
+            self.center = CGPointMake(superviewFrame.size.width - _horizontalOffset, 0);
             break;
         }
         case MGBadgePositionTopLeft: {
-            self.center = CGPointMake(0, 0);
+            self.center = CGPointMake(_horizontalOffset, 0);
             break;
         }
         case MGBadgePositionBottomRight: {
-            self.center = CGPointMake(superviewFrame.size.width, superviewFrame.size.height);
+            self.center = CGPointMake(superviewFrame.size.width - _horizontalOffset, superviewFrame.size.height);
             break;
         }
         case MGBadgePositionBottomLeft: {
-            self.center = CGPointMake(0, superviewFrame.size.height);
+            self.center = CGPointMake(_horizontalOffset, superviewFrame.size.height);
             break;
         }
         default:
