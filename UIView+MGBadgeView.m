@@ -9,6 +9,19 @@
 #import "UIView+MGBadgeView.h"
 #import <objc/runtime.h>
 
+void MGFillRoundedRect(CGContextRef __nullable context, CGRect rect, CGFloat radius) {
+    CGFloat theRadius = MAX(radius, rect.size.height/2.0);
+    CGFloat minx = CGRectGetMinX(rect), midx = CGRectGetMidX(rect), maxx = CGRectGetMaxX(rect);
+    CGFloat miny = CGRectGetMinY(rect), midy = CGRectGetMidY(rect), maxy = CGRectGetMaxY(rect);
+    CGContextMoveToPoint(context, minx, midy);
+    CGContextAddArcToPoint(context, minx, miny, midx, miny, theRadius);
+    CGContextAddArcToPoint(context, maxx, miny, maxx, midy, theRadius);
+    CGContextAddArcToPoint(context, maxx, maxy, midx, maxy, theRadius);
+    CGContextAddArcToPoint(context, minx, maxy, minx, midy, theRadius);
+    CGContextClosePath(context);
+    CGContextFillPath(context);
+}
+
 @interface MGBadgeView ()
 @property (nonatomic) BOOL useText;
 @end
@@ -54,10 +67,11 @@ static int const kMGBadgeViewTag = 9876;
         CGContextRef context = UIGraphicsGetCurrentContext();
         
         [_outlineColor set];
-        CGContextFillEllipseInRect(context, CGRectInset(rect, 1.0, 1.0));
+        
+        MGFillRoundedRect(context, CGRectInset(rect, 1.0, 1.0), 0);
         
         [_badgeColor set];
-        CGContextFillEllipseInRect(context, CGRectInset(rect, _outlineWidth + 1.0, _outlineWidth + 1.0));
+        MGFillRoundedRect(context, CGRectInset(rect, _outlineWidth + 1.0, _outlineWidth + 1.0), 0);
         
         CGSize numberSize = [stringToDraw sizeWithAttributes:@{NSFontAttributeName: _font}];
         
