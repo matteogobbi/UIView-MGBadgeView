@@ -9,6 +9,10 @@
 #import "UIView+MGBadgeView.h"
 #import <objc/runtime.h>
 
+@interface MGBadgeView ()
+@property (nonatomic) BOOL useText;
+@end
+
 @implementation MGBadgeView
 
 static float const kMGBadgeViewInnerSpaceFromBorder = 7.0;
@@ -43,9 +47,9 @@ static int const kMGBadgeViewTag = 9876;
 
 - (void)drawRect:(CGRect)rect {
     
-    if(_badgeValue != 0 || _displayIfZero) {
+    if ((_useText && (_badgeText ?: @"").length > 0) || (!_useText && (_badgeValue != 0 || _displayIfZero))) {
         
-        NSString *stringToDraw = [NSString stringWithFormat:@"%ld", (long)_badgeValue];
+        NSString *stringToDraw = _useText ? (_badgeText ?: @"") : [NSString stringWithFormat:@"%ld", (long)_badgeValue];
         
         CGContextRef context = UIGraphicsGetCurrentContext();
         
@@ -80,6 +84,8 @@ static int const kMGBadgeViewTag = 9876;
     if(_badgeValue != badgeValue) {
         
         _badgeValue = badgeValue;
+        _badgeText = nil;
+        _useText = NO;
         
         if(badgeValue != 0 || _displayIfZero) {
             [self mg_updateBadgeViewSize];
@@ -87,6 +93,24 @@ static int const kMGBadgeViewTag = 9876;
             if(_position == MGBadgePositionBest)
                 [self mg_updateBadgeViewPosition];
         
+        } else {
+            self.frame = CGRectZero;
+        }
+        
+        [self setNeedsDisplay];
+    }
+}
+
+- (void)setBadgeText:(NSString *)badgeText {
+    if(![(badgeText ?: @"") isEqualToString:(_badgeText ?: @"")]) {
+        _badgeText = [NSString stringWithString:(badgeText ?: @"")];
+        _badgeValue = 0;
+        _useText = YES;
+        
+        if(_badgeText.length > 0) {
+            [self mg_updateBadgeViewSize];
+            if(_position == MGBadgePositionBest)
+                [self mg_updateBadgeViewPosition];
         } else {
             self.frame = CGRectZero;
         }
@@ -181,10 +205,15 @@ static int const kMGBadgeViewTag = 9876;
 
 - (void)mg_updateBadgeViewSize {
     //Calculate badge bounds
-    CGSize numberSize = [[NSString stringWithFormat:@"%ld", (long)_badgeValue] sizeWithAttributes:@{NSFontAttributeName: _font}];
+    CGSize contentSize = CGSizeZero;
+    if (_useText) {
+        contentSize = [(_badgeText ?: @"") sizeWithAttributes:@{NSFontAttributeName: _font}];
+    } else {
+        contentSize = [[NSString stringWithFormat:@"%ld", (long)_badgeValue] sizeWithAttributes:@{NSFontAttributeName: _font}];
+    }
     
-    float badgeHeight = MAX(BADGE_TOTAL_OFFSET + numberSize.height, _minDiameter);
-    float badgeWidth = MAX(badgeHeight, BADGE_TOTAL_OFFSET + numberSize.width);
+    float badgeHeight = MAX(BADGE_TOTAL_OFFSET + contentSize.height, _minDiameter);
+    float badgeWidth = MAX(badgeHeight, BADGE_TOTAL_OFFSET + contentSize.width);
     
     [self setBounds:CGRectMake(0, 0, badgeWidth, badgeHeight)];
 }
