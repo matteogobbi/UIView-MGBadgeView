@@ -56,12 +56,12 @@ static int const kMGBadgeViewTag = 9876;
 
 - (void)drawRect:(CGRect)rect {
     NSString *stringToDraw = nil;
-    if(_badgeImage) {
-        stringToDraw = nil;
-    } else if(_badgeText) {
-        stringToDraw = _badgeText;
-    } else if(_badgeValue != 0 || _displayIfZero) {
-        stringToDraw = [NSString stringWithFormat:@"%ld", (long)_badgeValue];
+    if(!_badgeImage) {
+        if(_badgeText) {
+            stringToDraw = _badgeText;
+        } else if(_badgeValue != 0 || _displayIfZero) {
+            stringToDraw = [NSString stringWithFormat:@"%ld", (long)_badgeValue];
+        }
     }
     
     CGContextRef context = UIGraphicsGetCurrentContext();
