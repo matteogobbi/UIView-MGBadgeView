@@ -118,8 +118,8 @@ static int const kMGBadgeViewTag = 9876;
 }
 
 - (void)setBadgeText:(NSString *)badgeText {
-    if(![(badgeText ?: @"") isEqualToString:(_badgeText ?: @"")]) {
-        _badgeText = [NSString stringWithString:(badgeText ?: @"")];
+    if(_badgeText != badgeText) {
+        _badgeText = badgeText;
         _badgeValue = 0;
         _badgeImage = nil;
         
