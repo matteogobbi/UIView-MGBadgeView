@@ -73,6 +73,13 @@ static int const kMGBadgeViewTag = 9876;
     }
 }
 
+- (void)layoutSubviews {
+    [super layoutSubviews];
+
+    [self mg_updateBadgeViewSize];
+    [self mg_updateBadgeViewPosition];
+}
+
 #pragma mark - Properties accessor methods
 
 - (void)setBadgeValue:(NSInteger)badgeValue {
