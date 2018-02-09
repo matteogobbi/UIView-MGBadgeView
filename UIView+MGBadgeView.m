@@ -9,6 +9,19 @@
 #import "UIView+MGBadgeView.h"
 #import <objc/runtime.h>
 
+void MGFillRoundedRect(CGContextRef __nullable context, CGRect rect, CGFloat radius) {
+    CGFloat theRadius = MAX(radius, rect.size.height/2.0);
+    CGFloat minx = CGRectGetMinX(rect), midx = CGRectGetMidX(rect), maxx = CGRectGetMaxX(rect);
+    CGFloat miny = CGRectGetMinY(rect), midy = CGRectGetMidY(rect), maxy = CGRectGetMaxY(rect);
+    CGContextMoveToPoint(context, minx, midy);
+    CGContextAddArcToPoint(context, minx, miny, midx, miny, theRadius);
+    CGContextAddArcToPoint(context, maxx, miny, maxx, midy, theRadius);
+    CGContextAddArcToPoint(context, maxx, maxy, midx, maxy, theRadius);
+    CGContextAddArcToPoint(context, minx, maxy, minx, midy, theRadius);
+    CGContextClosePath(context);
+    CGContextFillPath(context);
+}
+
 @implementation MGBadgeView
 
 static float const kMGBadgeViewInnerSpaceFromBorder = 7.0;
@@ -42,19 +55,29 @@ static int const kMGBadgeViewTag = 9876;
 }
 
 - (void)drawRect:(CGRect)rect {
+    NSString *stringToDraw = nil;
+    if(!_badgeImage) {
+        if(_badgeText) {
+            stringToDraw = _badgeText;
+        } else if(_badgeValue != 0 || _displayIfZero) {
+            stringToDraw = [NSString stringWithFormat:@"%ld", (long)_badgeValue];
+        }
+    }
     
-    if(_badgeValue != 0 || _displayIfZero) {
-        
-        NSString *stringToDraw = [NSString stringWithFormat:@"%ld", (long)_badgeValue];
-        
-        CGContextRef context = UIGraphicsGetCurrentContext();
-        
-        [_outlineColor set];
-        CGContextFillEllipseInRect(context, CGRectInset(rect, 1.0, 1.0));
-        
-        [_badgeColor set];
-        CGContextFillEllipseInRect(context, CGRectInset(rect, _outlineWidth + 1.0, _outlineWidth + 1.0));
-        
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    
+    [_outlineColor set];
+    MGFillRoundedRect(context, CGRectInset(rect, 1.0, 1.0), 0);
+    
+    [_badgeColor set];
+    MGFillRoundedRect(context, CGRectInset(rect, _outlineWidth + 1.0, _outlineWidth + 1.0), 0);
+    
+    if(_badgeImage) {
+        CGRect imageRect = CGRectMake((rect.size.width - _badgeImage.size.width)/2.0, (rect.size.height - _badgeImage.size.height)/2.0, _badgeImage.size.width, _badgeImage.size.height);
+        [_badgeImage drawInRect:imageRect];
+    }
+    
+    if(stringToDraw) {
         CGSize numberSize = [stringToDraw sizeWithAttributes:@{NSFontAttributeName: _font}];
         
         [_textColor set];
@@ -69,7 +92,6 @@ static int const kMGBadgeViewTag = 9876;
                                                           NSParagraphStyleAttributeName : paragrapStyle,
                                                           NSForegroundColorAttributeName : _textColor
                                                           }];
-        
     }
 }
 
@@ -83,10 +105,10 @@ static int const kMGBadgeViewTag = 9876;
 #pragma mark - Properties accessor methods
 
 - (void)setBadgeValue:(NSInteger)badgeValue {
-    
     if(_badgeValue != badgeValue) {
-        
         _badgeValue = badgeValue;
+        _badgeText = nil;
+        _badgeImage = nil;
         
         if(badgeValue != 0 || _displayIfZero) {
             [self mg_updateBadgeViewSize];
@@ -94,6 +116,43 @@ static int const kMGBadgeViewTag = 9876;
             if(_position == MGBadgePositionBest)
                 [self mg_updateBadgeViewPosition];
         
+        } else {
+            self.frame = CGRectZero;
+        }
+        
+        [self setNeedsDisplay];
+    }
+}
+
+- (void)setBadgeText:(NSString *)badgeText {
+    if(_badgeText != badgeText) {
+        _badgeText = badgeText;
+        _badgeValue = 0;
+        _badgeImage = nil;
+        
+        if(_badgeText.length > 0) {
+            [self mg_updateBadgeViewSize];
+            if(_position == MGBadgePositionBest)
+                [self mg_updateBadgeViewPosition];
+        } else {
+            self.frame = CGRectZero;
+        }
+        
+        [self setNeedsDisplay];
+    }
+}
+
+- (void)setBadgeImage:(UIImage *)badgeImage {
+    if(_badgeImage != badgeImage) {
+        _badgeImage = badgeImage;
+        _badgeText = nil;
+        _badgeValue = 0;
+        
+        if(badgeImage) {
+            [self mg_updateBadgeViewSize];
+            if(_position == MGBadgePositionBest) {
+                [self mg_updateBadgeViewPosition];
+            }
         } else {
             self.frame = CGRectZero;
         }
@@ -188,14 +247,22 @@ static int const kMGBadgeViewTag = 9876;
 
 - (void)mg_updateBadgeViewSize {
     //Calculate badge bounds
-    CGSize numberSize = [[NSString stringWithFormat:@"%ld", (long)_badgeValue] sizeWithAttributes:@{NSFontAttributeName: _font}];
+    CGSize contentSize = CGSizeZero;
+    if (_badgeImage) {
+        // assume images should always be rendered in a circle, hence ensure content is square for equal padding
+        CGFloat imageLongestSide = MAX(_badgeImage.size.width, _badgeImage.size.height);
+        contentSize = CGSizeMake(imageLongestSide, imageLongestSide);
+    } else if(_badgeText) {
+        contentSize = [(_badgeText ?: @"") sizeWithAttributes:@{NSFontAttributeName: _font}];
+    } else {
+        contentSize = [[NSString stringWithFormat:@"%ld", (long)_badgeValue] sizeWithAttributes:@{NSFontAttributeName: _font}];
+    }
     
-    float badgeHeight = MAX(BADGE_TOTAL_OFFSET + numberSize.height, _minDiameter);
-    float badgeWidth = MAX(badgeHeight, BADGE_TOTAL_OFFSET + numberSize.width);
-    
+    float badgeHeight = ceilf(MAX(BADGE_TOTAL_OFFSET + contentSize.height, _minDiameter));
+    float badgeWidth = ceilf(MAX(badgeHeight, BADGE_TOTAL_OFFSET + contentSize.width));
+
     [self setBounds:CGRectMake(0, 0, badgeWidth, badgeHeight)];
 }
-
 
 - (void)mg_updateBadgeViewPosition {
     CGRect superviewFrame = self.superview.frame;

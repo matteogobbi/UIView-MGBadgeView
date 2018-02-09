@@ -26,6 +26,10 @@ typedef NS_ENUM(NSUInteger, MGBadgePosition) {
 
 @property (nonatomic) NSInteger badgeValue;
 
+@property (copy, nonatomic) NSString *badgeText;
+
+@property (strong, nonatomic) UIImage *badgeImage;
+
 @property(strong, nonatomic) UIFont *font;
 
 @property(strong, nonatomic) UIColor *badgeColor;
