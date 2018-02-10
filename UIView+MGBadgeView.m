@@ -42,6 +42,8 @@ static int const kMGBadgeViewTag = 9876;
 }
 
 - (void)drawRect:(CGRect)rect {
+    [self mg_updateBadgeViewSize];
+    [self mg_updateBadgeViewPosition];
     
     if(_badgeValue != 0 || _displayIfZero) {
         
@@ -90,9 +92,7 @@ static int const kMGBadgeViewTag = 9876;
         
         if(badgeValue != 0 || _displayIfZero) {
             [self mg_updateBadgeViewSize];
-        
-            if(_position == MGBadgePositionBest)
-                [self mg_updateBadgeViewPosition];
+            [self mg_updateBadgeViewPosition];
         
         } else {
             self.frame = CGRectZero;
@@ -114,9 +114,7 @@ static int const kMGBadgeViewTag = 9876;
     if (_minDiameter != minDiameter) {
         _minDiameter = minDiameter;
         
-        if(_position == MGBadgePositionBest)
-            [self mg_updateBadgeViewPosition];
-        
+        [self mg_updateBadgeViewPosition];
         [self setNeedsDisplay];
     }
 }
@@ -146,9 +144,7 @@ static int const kMGBadgeViewTag = 9876;
     if(_outlineWidth != outlineWidth) {
         _outlineWidth = outlineWidth;
         
-        if(_position == MGBadgePositionBest)
-            [self mg_updateBadgeViewPosition];
-        
+        [self mg_updateBadgeViewPosition];
         [self setNeedsDisplay];
     }
 }
@@ -158,11 +154,7 @@ static int const kMGBadgeViewTag = 9876;
         _font = font;
         
         [self mg_updateBadgeViewSize];
-        
-        if(_position == MGBadgePositionBest)
-            [self mg_updateBadgeViewPosition];
-
-        
+        [self mg_updateBadgeViewPosition];
         [self setNeedsDisplay];
     }
 }
@@ -174,9 +166,7 @@ static int const kMGBadgeViewTag = 9876;
         if(_badgeValue == 0) {
             if(_displayIfZero) {
                 [self mg_updateBadgeViewSize];
-                
-                if(_position == MGBadgePositionBest)
-                    [self mg_updateBadgeViewPosition];
+                [self mg_updateBadgeViewPosition];
             } else {
                 self.frame = CGRectZero;
             }
